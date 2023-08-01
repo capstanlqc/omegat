@@ -1,15 +1,21 @@
 ----------------------------------------------------------------------
  OmegaT 6.1.0
 ----------------------------------------------------------------------
-  12 Enhancement
-  18 Bug fixes
+  16 Enhancement
+  21 Bug fixes
 ----------------------------------------------------------------------
 6.1.0 vs 6.0.0
 
   Implemented requests:
 
+  - Request to add new API to allow plugins/modules to add menu item in requested place
+  https://sourceforge.net/p/omegat/feature-requests/1703
+
   - Team: SVN support svn+ssh protocol with key authentication
   https://sourceforge.net/p/omegat/feature-requests/1700/
+
+  - SVN/Team project should respect access URL specified
+  https://sourceforge.net/p/omegat/feature-requests/1707/
 
   - Team: SVN: Replacing trilead-ssh2 with Apache sshd
   https://sourceforge.net/p/omegat/feature-requests/1699/
@@ -17,8 +23,17 @@
   - Better error message for omegat.project failure
   https://sourceforge.net/p/omegat/feature-requests/1696/
 
+  - Generate JSON format stastics file when save
+  https://sourceforge.net/p/omegat/feature-requests/1695/
+
+  - Generate and compile TXT and JSON file when committing target files
+  https://sourceforge.net/p/omegat/feature-requests/1690/
+
   - Build System: update gradle verison to 7.5.1
   https://sourceforge.net/p/omegat/feature-requests/1691/
+
+  - Update LanguageTool to latest version (6.1)
+  https://sourceforge.net/p/omegat/feature-requests/1637/
 
   - Team feature: SSH support id_ecdsa and id_ed25519 for default key
   https://sourceforge.net/p/omegat/feature-requests/1598/
@@ -49,6 +64,21 @@
 
   Bug fixes:
 
+  - Google2 Translate MT connector failed to parse response
+  https://sourceforge.net/p/omegat/bugs/1206/
+
+  - Incompatible among LanguageTool@6 and lucene-gosen@5 from omegat-org
+  https://sourceforge.net/p/omegat/bugs/1204/
+
+  - Integration test(docker) failure with 503
+  https://sourceforge.net/p/omegat/bugs/1199/
+
+  - Content of notes elements are not displayed correctly with Xliff filter
+  https://sourceforge.net/p/omegat/bugs/1192/
+
+  - ProjectFile has unwanted XML element otherAttributes
+  https://sourceforge.net/p/omegat/bugs/1191/
+
   - Languagetool crashes when reloading the project
   https://sourceforge.net/p/omegat/bugs/1182/
 
@@ -61,14 +91,20 @@
   - build/release: Windows binary signature with PKCS#11 HSM
   https://sourceforge.net/p/omegat/bugs/1179/
 
-  - Team project failed to merge changes with TMXMerge
-  https://sourceforge.net/p/omegat/bugs/1170/
-
   - Team(git): when connecting new server, connection failed
   https://sourceforge.net/p/omegat/bugs/1177/
 
   - The COMPILE event is fired after the target commit
   https://sourceforge.net/p/omegat/bugs/1176/
+
+  - Passphrase for SSH key is stored with key= null://null:-1
+  https://sourceforge.net/p/omegat/bugs/1174/
+
+  - OmegaT ask passphrase to connect git+ssh server but dialog label is user/pass
+  https://sourceforge.net/p/omegat/bugs/1173/
+
+  - Team project failed to merge changes with TMXMerge
+  https://sourceforge.net/p/omegat/bugs/1170/
 
   - Useless warning log from CSS parser library
   https://sourceforge.net/p/omegat/bugs/1169/
@@ -102,6 +138,9 @@
 
   - Lucene 5.2 does not work under WebStart
   https://sourceforge.net/p/omegat/bugs/813/
+
+  - Incorrect display of RTL segments in the Fuzzy Matches pane
+  https://sourceforge.net/p/omegat/bugs/558/
 
 ----------------------------------------------------------------------
  OmegaT 6.0.0 (2023-06-19)
