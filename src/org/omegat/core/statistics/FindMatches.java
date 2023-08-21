@@ -29,7 +29,6 @@
 package org.omegat.core.statistics;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -303,8 +302,6 @@ public class FindMatches {
                 near.attr = similarityData;
             }
         }
-
-        result.sort(Comparator.comparing(ns -> ns.projs[0]));
 
         return result;
     }
