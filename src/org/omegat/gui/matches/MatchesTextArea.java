@@ -200,11 +200,11 @@ public class MatchesTextArea extends EntryInfoThreadPane<List<NearString>> imple
 
         NearString.SORT_KEY key = Preferences.getPreferenceEnumDefault(Preferences.EXT_TMX_SORT_KEY, SORT_KEY.SCORE);
         
-        debug("BEFORE SORT", newMatches);
+        StringUtil.debug("BEFORE SORT", newMatches);
         Comparator<NearString> nsPathComparator = (NearString ns1, NearString ns2) -> ns1.projs[0].toLowerCase().compareTo(ns2.projs[0].toLowerCase());
         Comparator<NearString> nsScoreComparator = Comparator.comparing(ns -> ns.scores[0], new ScoresComparator(key).reversed());
         newMatches.sort(nsPathComparator.thenComparing(nsScoreComparator));
-        debug("AFTER SORT", newMatches);
+        StringUtil.debug("AFTER SORT", newMatches);
 
         matches.addAll(newMatches);
         delimiters.add(0);
@@ -231,28 +231,6 @@ public class MatchesTextArea extends EntryInfoThreadPane<List<NearString>> imple
 
         checkForReplaceTranslation();
     }
-    
-
-    private void debug(String msg, List<NearString> nearStrings) {
-        System.out.println(msg);
-        StringBuilder sb = new StringBuilder("[\n");
-        boolean first = true;
-        for (NearString ns : nearStrings) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append("\n");
-            }
-            sb.append("\t");
-            String s = String.join(" ", ns.projs[0], "=>", StringUtil.truncate(ns.source, 20), ns.scores[0].toString(),
-                    "x" + ns.scores.length);
-            sb.append(s);
-        }
-        sb.append("\n]");
-        System.out.println(sb);
-
-    }
-
 
     @Override
     protected void onProjectOpen() {
