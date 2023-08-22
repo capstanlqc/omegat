@@ -100,7 +100,6 @@ public class ImportFromAutoTMX {
                         // - no translation or
                         // - the existing translation doesn't come from an enforced TM or
                         // - the existing enforced translation was a default translation but this one is not
-                        StringUtil.debug("SET ENFORCE TRANSLATION", e);
                         setTranslation(ste, e, isDefaultTranslation, TMXEntry.ExternalLinked.xENFORCED);
                     } else if (!existTranslation.isTranslated()
                             || (!isDefaultTranslation && hasAlternateTranslations)) {

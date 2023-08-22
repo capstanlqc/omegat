@@ -31,20 +31,15 @@
  **************************************************************************/
 package org.omegat.util;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.Normalizer;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 
 import javax.xml.bind.DatatypeConverter;
-
-import org.omegat.core.data.PrepareTMXEntry;
-import org.omegat.core.matching.NearString;
 
 /**
  * Utilities for string processing.
@@ -992,54 +987,3 @@ public final class StringUtil {
         }
         return str.substring(start + Character.charCount(separator), str.length());
     }
-    
-    // DEBUG STUFF
-
-    public static void debug(String msg, List<NearString> nearStrings) {
-        System.out.println(">>> " + msg);
-        StringBuilder sb = new StringBuilder("[\n");
-        boolean first = true;
-        for (NearString ns : nearStrings) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append("\n");
-            }
-            sb.append("\t");
-            String s = String.join(" ", ns.projs[0], "=>", StringUtil.truncate(ns.source, 20), ns.scores[0].toString(),
-                    "x" + ns.scores.length);
-            sb.append(s);
-        }
-        sb.append("\n]");
-        System.out.println(sb);
-
-    }
-    
-
-    public static void debug(String msg, PrepareTMXEntry ste) {
-        System.out.println(">>> " + msg);
-        String s = String.join(" ", ste.otherProperties.toString(), ste.source, ste.translation);
-       
-        System.out.println(s);
-
-    }
-
-    public static void debugFiles(String msg, List<File> foundFiles) {
-        System.out.println(">>> " + msg);
-        StringBuilder sb = new StringBuilder("[\n");
-        boolean first = true;
-        for (File ns : foundFiles) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append("\n");
-            }
-            sb.append("\t");
-            String s = String.join(" ", ns.toString());
-            sb.append(s);
-        }
-        sb.append("\n]");
-        System.out.println(sb);
-        
-    }
-}

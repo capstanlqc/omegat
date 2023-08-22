@@ -199,12 +199,7 @@ public class MatchesTextArea extends EntryInfoThreadPane<List<NearString>> imple
         }
 
         NearString.SORT_KEY key = Preferences.getPreferenceEnumDefault(Preferences.EXT_TMX_SORT_KEY, SORT_KEY.SCORE);
-        
-        StringUtil.debug("BEFORE SORT", newMatches);
-        Comparator<NearString> nsPathComparator = (NearString ns1, NearString ns2) -> ns1.projs[0].toLowerCase().compareTo(ns2.projs[0].toLowerCase());
-        Comparator<NearString> nsScoreComparator = Comparator.comparing(ns -> ns.scores[0], new ScoresComparator(key).reversed());
-        newMatches.sort(nsPathComparator.thenComparing(nsScoreComparator));
-        StringUtil.debug("AFTER SORT", newMatches);
+        newMatches.sort(Comparator.comparing(ns -> ns.scores[0], new ScoresComparator(key).reversed()));
 
         matches.addAll(newMatches);
         delimiters.add(0);
