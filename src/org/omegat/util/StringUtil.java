@@ -987,3 +987,4 @@ public final class StringUtil {
         }
         return str.substring(start + Character.charCount(separator), str.length());
     }
+}
