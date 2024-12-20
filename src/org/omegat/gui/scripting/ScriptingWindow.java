@@ -115,7 +115,7 @@ public class ScriptingWindow {
 
     private static final Logger LOGGER = Logger.getLogger(ScriptingWindow.class.getName());
 
-    static ScriptingWindow window;
+    static public ScriptingWindow window;
 
     public static void loadPlugins() {
         CoreEvents.registerApplicationEventListener(new IApplicationEventListener() {
@@ -572,6 +572,7 @@ public class ScriptingWindow {
             } catch (ExecutionException e) {
                 logResult(OStrings.getString("SCW_SCRIPT_ERROR"), e);
             }
+            inEventsLoop--;
         }
     }
 
@@ -586,6 +587,8 @@ public class ScriptingWindow {
     public void executeScript(ScriptItem scriptItem, Map<String, Object> bindings, boolean cancelQueue) {
         executeScripts(Arrays.asList(scriptItem), bindings, cancelQueue);
     }
+    
+    public int inEventsLoop = 0;
 
     /**
      * Execute scripts sequentially to make sure they don't interrupt each
@@ -608,6 +611,7 @@ public class ScriptingWindow {
             try {
                 String scriptString = scriptItem.getText();
                 queuedWorkers.add(createScriptWorker(scriptString, scriptItem, bindings));
+                inEventsLoop++;
             } catch (IOException e) {
                 // TODO: Do we really want to handle the exception here, like
                 // this?
