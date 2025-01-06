@@ -65,7 +65,7 @@ public final class OStrings {
     static {
         ResourceBundle b = ResourceBundle.getBundle("org/omegat/Version");
         validateVersion(b::getString);
-        VERSION = b.getString("version");
+        VERSION = b.getString("version") + b.getString("beta");
         UPDATE = b.getString("update");
         REVISION = b.getString("revision");
         IS_BETA = !b.getString("beta").isEmpty();
