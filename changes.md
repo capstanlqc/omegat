@@ -1,6 +1,6 @@
 # OmegaT -- cApStAn build
 
-## Version 5.7.4 ?? () -- future release
+## Version 5.7.4_Beta (911305e31) -- internal release
 
 * Option to block target file creation also kicked when closing project
 * M68: Bugfix for unexpected auto-population behaviour
