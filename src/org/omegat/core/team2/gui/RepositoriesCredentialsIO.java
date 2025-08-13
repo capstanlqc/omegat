@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 
-public class RepoCredentialsIO {
+public class RepositoriesCredentialsIO {
 
     public static void exportRepositories(Component parent, List<String> repos) {
         if (repos.isEmpty()) return;

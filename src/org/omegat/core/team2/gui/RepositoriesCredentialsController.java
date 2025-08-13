@@ -116,11 +116,11 @@ public class RepositoriesCredentialsController extends BasePreferencesController
 
     private void exportAction() {
         List<String> toExport = getTargetsForAction();
-        RepoCredentialsIO.exportRepositories(dialog, toExport);
+        RepositoriesCredentialsIO.exportRepositories(dialog, toExport);
     }
 
     private void importAction() {
-        int importedCount = RepoCredentialsIO.importRepositories(dialog);
+        int importedCount = RepositoriesCredentialsIO.importRepositories(dialog);
         if (importedCount > 0) {
             initFromPrefs();
             javax.swing.JOptionPane.showMessageDialog(dialog,
@@ -133,7 +133,7 @@ public class RepositoriesCredentialsController extends BasePreferencesController
     private void editAction() {
         String originalRepo = dialog.getHighlightedRepo();
         if (originalRepo == null) return;
-        RepoCredentialsEditDialog dlg = new RepoCredentialsEditDialog(getOwnerWindow(),
+        RepositoriesCredentialsEditDialog dlg = new RepositoriesCredentialsEditDialog(getOwnerWindow(),
                 OStrings.getString("PREFS_REPO_CREDS_EDIT_TITLE"), originalRepo);
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {
@@ -154,7 +154,7 @@ public class RepositoriesCredentialsController extends BasePreferencesController
     }
 
     private void addAction() {
-        RepoCredentialsEditDialog dlg = new RepoCredentialsEditDialog(getOwnerWindow(),
+        RepositoriesCredentialsEditDialog dlg = new RepositoriesCredentialsEditDialog(getOwnerWindow(),
                 OStrings.getString("PREFS_REPO_CREDS_ADD_TITLE"), null);
         dlg.setVisible(true);
         if (dlg.isConfirmed()) {

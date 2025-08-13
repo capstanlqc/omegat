@@ -7,9 +7,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Set;
 
-public class RepoCredentialsEditDialog extends JDialog {
+public class RepositoriesCredentialsEditDialog extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private final JTextField urlField;
@@ -21,12 +23,11 @@ public class RepoCredentialsEditDialog extends JDialog {
     private boolean confirmed = false;
     private final String originalRepo;
 
-    // Allowed URL schemes
     private static final Set<String> ALLOWED_SCHEMES = Set.of(
             "http", "https", "git", "file", "svn", "svn+ssh", "ftp", "ftps"
     );
 
-    public RepoCredentialsEditDialog(Window owner, String title, String repoUrl) {
+    public RepositoriesCredentialsEditDialog(Window owner, String title, String repoUrl) {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         this.originalRepo = repoUrl;
 
@@ -34,77 +35,87 @@ public class RepoCredentialsEditDialog extends JDialog {
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // ==== Top panel with inputs ====
+        // --- Fields panel ---
         JPanel fieldsPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 4, 4, 4);
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
 
-        // URL field
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        // URL
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         fieldsPanel.add(new JLabel(OStrings.getString("PREFS_REPO_CREDS_URL")), gbc);
+
         urlField = new JTextField();
-        gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         fieldsPanel.add(urlField, gbc);
 
         // Username
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         fieldsPanel.add(new JLabel(OStrings.getString("PREFS_REPO_CREDS_USERNAME")), gbc);
+
         usernameField = new JTextField();
-        gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         fieldsPanel.add(usernameField, gbc);
 
-        // Password + toggle
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE;
+        // Password
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         fieldsPanel.add(new JLabel(OStrings.getString("PREFS_REPO_CREDS_PASSWORD")), gbc);
+
         JPanel passPanel = new JPanel(new BorderLayout(5, 0));
         passwordField = new JPasswordField();
         passPanel.add(passwordField, BorderLayout.CENTER);
+
         JButton toggleButton = new JButton();
-        org.openide.awt.Mnemonics.setLocalizedText(toggleButton,
-                OStrings.getString("PREFS_REPO_CREDS_SHOW"));
+        org.openide.awt.Mnemonics.setLocalizedText(toggleButton, OStrings.getString("PREFS_REPO_CREDS_SHOW"));
         toggleButton.addActionListener(ev -> {
             if (passwordField.getEchoChar() == 0) {
                 passwordField.setEchoChar((Character) UIManager.getDefaults().get("PasswordField.echoChar"));
-                org.openide.awt.Mnemonics.setLocalizedText(toggleButton,
-                        OStrings.getString("PREFS_REPO_CREDS_SHOW"));
+                org.openide.awt.Mnemonics.setLocalizedText(toggleButton, OStrings.getString("PREFS_REPO_CREDS_SHOW"));
             } else {
                 passwordField.setEchoChar((char) 0);
-                org.openide.awt.Mnemonics.setLocalizedText(toggleButton,
-                        OStrings.getString("PREFS_REPO_CREDS_HIDE"));
+                org.openide.awt.Mnemonics.setLocalizedText(toggleButton, OStrings.getString("PREFS_REPO_CREDS_HIDE"));
             }
         });
         passPanel.add(toggleButton, BorderLayout.EAST);
-        gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         fieldsPanel.add(passPanel, gbc);
 
         // Checkbox
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.weightx = 1;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         stripSpacesCheck = new JCheckBox();
-        org.openide.awt.Mnemonics.setLocalizedText(stripSpacesCheck,
-                OStrings.getString("PREFS_REPO_CREDS_STRIP_SPACES"));
+        org.openide.awt.Mnemonics.setLocalizedText(stripSpacesCheck, OStrings.getString("PREFS_REPO_CREDS_STRIP_SPACES"));
         stripSpacesCheck.setSelected(true);
         fieldsPanel.add(stripSpacesCheck, gbc);
 
-        // Make fields panel expand vertically when resized
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weighty = 1; gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridwidth = 2;
+        // Glue for expansion
+        gbc.gridy = 4; gbc.weighty = 1; gbc.fill = GridBagConstraints.BOTH;
         fieldsPanel.add(Box.createVerticalGlue(), gbc);
 
         contentPanel.add(fieldsPanel, BorderLayout.CENTER);
 
-        // ==== Bottom: Status + buttons (anchored) ====
+        // --- Bottom: status + OK/Cancel ---
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
 
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         statusLabel = new JLabel(" ");
         statusLabel.setForeground(Color.RED);
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        JPanel statusHolder = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        statusHolder.add(statusLabel);
-        bottomPanel.add(statusHolder);
+        statusPanel.add(statusLabel);
+        bottomPanel.add(statusPanel);
 
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ok = new JButton();
@@ -118,21 +129,30 @@ public class RepoCredentialsEditDialog extends JDialog {
         bottomPanel.add(buttonsPanel);
 
         contentPanel.add(bottomPanel, BorderLayout.SOUTH);
+        add(contentPanel);
 
-        getContentPane().add(contentPanel);
-
-        // Populate if editing
+        // --- Prefill if editing ---
         if (repoUrl != null) {
             urlField.setText(repoUrl);
             usernameField.setText(TeamSettings.get(repoUrl + "!username"));
-            passwordField.setText(TeamSettings.get(repoUrl + "!password"));
+            String storedPwd = TeamSettings.get(repoUrl + "!password");
+            if (storedPwd != null) {
+                try {
+                    // Attempt Base64 decode
+                    String decoded = new String(Base64.getDecoder().decode(storedPwd), StandardCharsets.UTF_8);
+                    passwordField.setText(decoded);
+                } catch (IllegalArgumentException ex) {
+                    // Not Base64? Show as-is
+                    passwordField.setText(storedPwd);
+                }
+            }
         }
 
+        // Sizing
         pack();
         Dimension pref = getPreferredSize();
-        Dimension startSize = new Dimension(pref.width + 250, pref.height);
         setMinimumSize(pref);
-        setSize(startSize);
+        setSize(new Dimension(pref.width + 250, pref.height));
         setLocationRelativeTo(owner);
         setResizable(true);
     }
@@ -140,8 +160,7 @@ public class RepoCredentialsEditDialog extends JDialog {
     private boolean isValidURL(String s) {
         try {
             URL u = new URL(s);
-            String proto = u.getProtocol().toLowerCase();
-            return ALLOWED_SCHEMES.contains(proto);
+            return ALLOWED_SCHEMES.contains(u.getProtocol().toLowerCase());
         } catch (Exception e) {
             return false;
         }
@@ -172,8 +191,10 @@ public class RepoCredentialsEditDialog extends JDialog {
                 }
             }
         }
+        // Encode password as Base64 before storing
+        String encodedPw = Base64.getEncoder().encodeToString(pw.getBytes(StandardCharsets.UTF_8));
         TeamSettings.set(url + "!username", user);
-        TeamSettings.set(url + "!password", pw);
+        TeamSettings.set(url + "!password", encodedPw);
         confirmed = true;
         dispose();
     }
