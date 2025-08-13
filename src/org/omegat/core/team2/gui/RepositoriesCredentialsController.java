@@ -1,54 +1,23 @@
-/**************************************************************************
- OmegaT - Computer Assisted Translation (CAT) tool
-          with fuzzy matching, translation memory, keyword search,
-          glossaries, and translation leveraging into updated projects.
-
- Copyright (C) 2016 Alex Buloichick, Aaron Madlon-Kay
-               Home page: http://www.omegat.org/
-               Support center: https://omegat.org/support
-
- This file is part of OmegaT.
-
- OmegaT is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- OmegaT is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
- **************************************************************************/
-
 package org.omegat.core.team2.gui;
 
 import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
+import java.awt.Window;
+import java.net.URL;
+import java.util.*;
 import javax.swing.JComponent;
-import javax.swing.table.AbstractTableModel;
+import javax.swing.SwingUtilities;
 
 import org.omegat.core.team2.TeamSettings;
 import org.omegat.gui.preferences.BasePreferencesController;
 import org.omegat.util.OStrings;
 
-/**
- * Controller for forget credentials.
- *
- * @author Alex Buloichik (alex73mail@gmail.com)
- * @author Aaron Madlon-Kay
- */
 public class RepositoriesCredentialsController extends BasePreferencesController {
 
     private static final int MAX_ROW_COUNT = 10;
-
     private RepositoriesCredentialsPanel dialog;
+
+    // Stage list until OK
+    private List<String> stagedRepositories;
 
     @Override
     public JComponent getGui() {
@@ -66,9 +35,13 @@ public class RepositoriesCredentialsController extends BasePreferencesController
 
     private void initGui() {
         dialog = new RepositoriesCredentialsPanel();
-        dialog.list.getSelectionModel()
-                .addListSelectionListener(e -> dialog.btnRemove.setEnabled(dialog.list.getSelectedRow() != -1));
-        dialog.btnRemove.addActionListener(e -> removeSelected());
+
+        dialog.btnRemove.addActionListener(e -> removeAction());
+        dialog.btnExport.addActionListener(e -> exportAction());
+        dialog.btnImport.addActionListener(e -> importAction());
+        dialog.btnEdit.addActionListener(e -> editAction());
+        dialog.btnAdd.addActionListener(e -> addAction());
+
         Dimension tableSize = dialog.list.getPreferredSize();
         dialog.list.setPreferredScrollableViewportSize(
                 new Dimension(tableSize.width, dialog.list.getRowHeight() * MAX_ROW_COUNT));
@@ -76,63 +49,142 @@ public class RepositoriesCredentialsController extends BasePreferencesController
 
     @Override
     public void initFromPrefs() {
+        stagedRepositories = loadReposFromTeamSettings();
+        dialog.setRepositories(new ArrayList<>(stagedRepositories));
+    }
+
+    @Override
+    public void restoreDefaults() {
+        stagedRepositories = new ArrayList<>();
+        dialog.setRepositories(stagedRepositories);
+    }
+
+    @Override
+    public void undoChanges() {
+        initFromPrefs();
+    }
+
+    private List<String> loadReposFromTeamSettings() {
         Set<String> urls = new TreeSet<>();
         for (Object o : TeamSettings.listKeys()) {
-            String key = o.toString();
+            String key = String.valueOf(o);
             int p = key.lastIndexOf('!');
             if (p > 0) {
                 urls.add(key.substring(0, p));
             }
         }
-        dialog.list.setModel(new Model(urls));
+        return new ArrayList<>(urls);
     }
 
-    @Override
-    public void restoreDefaults() {
-    }
-
-    private void removeSelected() {
-        int selectedIndex = dialog.list.getSelectedRow();
-        if (selectedIndex < 0) {
-            return;
+    private List<String> getTargetsForAction() {
+        List<String> checked = dialog.getCheckedRepositories();
+        if (!checked.isEmpty()) {
+            return checked;
         }
-        Model model = (Model) dialog.list.getModel();
-        String selected = model.lines.get(selectedIndex);
+        String caret = dialog.getHighlightedRepo();
+        return caret != null ? List.of(caret) : List.of();
+    }
+
+    private Window getOwnerWindow() {
+        return SwingUtilities.getWindowAncestor(dialog);
+    }
+
+    private boolean validateURL(String url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void removeRepoFromSettings(String repo) {
         for (Object o : TeamSettings.listKeys()) {
             String key = o.toString();
-            if (key.startsWith(selected + "!")) {
+            if (key.startsWith(repo + "!")) {
                 TeamSettings.set(key, null);
             }
         }
-        model.lines.remove(selected);
-        model.fireTableDataChanged();
+    }
+
+    private void removeAction() {
+        List<String> toRemove = getTargetsForAction();
+        if (toRemove.isEmpty()) return;
+        stagedRepositories.removeAll(toRemove);
+        dialog.removeRepositories(toRemove);
+    }
+
+    private void exportAction() {
+        List<String> toExport = getTargetsForAction();
+        RepoCredentialsIO.exportRepositories(dialog, toExport);
+    }
+
+    private void importAction() {
+        int importedCount = RepoCredentialsIO.importRepositories(dialog);
+        if (importedCount > 0) {
+            initFromPrefs();
+            javax.swing.JOptionPane.showMessageDialog(dialog,
+                    OStrings.getString("PREFS_REPO_CREDS_IMPORT_DONE", importedCount),
+                    OStrings.getString("PREFS_REPO_CREDS_IMPORT_TITLE"),
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void editAction() {
+        String originalRepo = dialog.getHighlightedRepo();
+        if (originalRepo == null) return;
+        RepoCredentialsEditDialog dlg = new RepoCredentialsEditDialog(getOwnerWindow(),
+                OStrings.getString("PREFS_REPO_CREDS_EDIT_TITLE"), originalRepo);
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) {
+            String newUrl = dlg.getUrl();
+            if (!validateURL(newUrl)) {
+                javax.swing.JOptionPane.showMessageDialog(dialog,
+                        OStrings.getString("PREFS_REPO_CREDS_INVALID_URL"),
+                        OStrings.getString("ERROR_TITLE"),
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!originalRepo.equals(newUrl)) {
+                removeRepoFromSettings(originalRepo);
+            }
+            stagedRepositories = loadReposFromTeamSettings();
+            dialog.setRepositories(new ArrayList<>(stagedRepositories));
+        }
+    }
+
+    private void addAction() {
+        RepoCredentialsEditDialog dlg = new RepoCredentialsEditDialog(getOwnerWindow(),
+                OStrings.getString("PREFS_REPO_CREDS_ADD_TITLE"), null);
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) {
+            String newUrl = dlg.getUrl();
+            if (!validateURL(newUrl)) {
+                javax.swing.JOptionPane.showMessageDialog(dialog,
+                        OStrings.getString("PREFS_REPO_CREDS_INVALID_URL"),
+                        OStrings.getString("ERROR_TITLE"),
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            stagedRepositories = loadReposFromTeamSettings();
+            dialog.setRepositories(new ArrayList<>(stagedRepositories));
+        }
     }
 
     @Override
     public void persist() {
-    }
-
-    @SuppressWarnings("serial")
-    static class Model extends AbstractTableModel {
-        List<String> lines;
-
-        Model(Set<String> urls) {
-            lines = new ArrayList<String>(urls);
+        Set<String> currentKeys = new HashSet<>();
+        for (Object o : TeamSettings.listKeys()) {
+            currentKeys.add(o.toString());
         }
-
-        @Override
-        public int getColumnCount() {
-            return 1;
-        }
-
-        @Override
-        public int getRowCount() {
-            return lines.size();
-        }
-
-        @Override
-        public Object getValueAt(int row, int column) {
-            return lines.get(row);
+        for (String key : currentKeys) {
+            int p = key.lastIndexOf('!');
+            if (p > 0) {
+                String repo = key.substring(0, p);
+                if (!stagedRepositories.contains(repo)) {
+                    TeamSettings.set(key, null);
+                }
+            }
         }
     }
 }
