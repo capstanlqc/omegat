@@ -80,6 +80,19 @@ public class RepositoriesCredentialsPanel extends JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(btnEdit,   OStrings.getString("PREFS_REPO_CREDS_EDIT"));
         org.openide.awt.Mnemonics.setLocalizedText(btnAdd,    OStrings.getString("PREFS_REPO_CREDS_ADD"));
 
+        JButton[] buttons = {btnRemove, btnExport, btnImport, btnEdit, btnAdd};
+        int maxWidth = 120;
+        for (JButton btn : buttons) {
+            int width = btn.getSize().width;
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+        for (JButton btn : buttons) {
+            int height = btn.getPreferredSize().height;
+            btn.setMaximumSize(new Dimension(maxWidth, height));
+        }
+        
         jPanel2.add(btnRemove);
         jPanel2.add(btnExport);
         jPanel2.add(btnImport);
