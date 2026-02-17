@@ -65,6 +65,7 @@ import org.omegat.CLIParameters;
 import org.omegat.core.Core;
 import org.omegat.core.CoreEvents;
 import org.omegat.core.events.IApplicationEventListener;
+import org.omegat.core.team2.gui.RepositoriesCredentialsController;
 import org.omegat.gui.editor.EditorSettings;
 import org.omegat.gui.shortcuts.PropertiesShortcuts;
 import org.omegat.util.Log;
@@ -449,6 +450,7 @@ public class MainWindowMenu implements ActionListener, MenuListener, IMainMenu {
         optionsMenu.add(optionsSetupFileFiltersMenuItem = createMenuItem("TF_MENU_DISPLAY_FILTERS"));
         optionsMenu.add(optionsSentsegMenuItem = createMenuItem("MW_OPTIONSMENU_SENTSEG"));
         optionsMenu.add(optionsWorkflowMenuItem = createMenuItem("MW_OPTIONSMENU_WORKFLOW"));
+        optionsMenu.add(optionsCredentialsMenuItem = createMenuItem("MW_OPTIONSMENU_CREDENTIALS"));
         optionsMenu.addSeparator();
         optionsMenu.add(optionsAccessConfigDirMenuItem = createMenuItem("MW_OPTIONSMENU_ACCESS_CONFIG_DIR"));
         optionsMenu.addSeparator();
@@ -816,6 +818,7 @@ public class MainWindowMenu implements ActionListener, MenuListener, IMainMenu {
     JMenuItem optionsAutoCompleteHistoryCompletionMenuItem;
     JMenuItem optionsAutoCompleteHistoryPredictionMenuItem;
     JMenuItem optionsWorkflowMenuItem;
+    JMenuItem optionsCredentialsMenuItem;
     JCheckBoxMenuItem optionsMTAutoFetchCheckboxMenuItem;
     JMenuItem optionsPreferencesMenuItem;
     JMenuItem projectCloseMenuItem;
