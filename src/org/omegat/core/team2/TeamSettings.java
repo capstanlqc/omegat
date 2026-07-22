@@ -29,13 +29,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+
+import org.omegat.core.team2.impl.TeamUtils;
 import org.omegat.util.StaticUtils;
+import org.omegat.util.Log;
 
 /**
- * Class for read/save repository-specific settings in the ~/.omegat/ directory.
+ * Class for read/save repository-specific settings in the ~/.omegat/ directory. <br/>
+ * Warning: this class manages calls to encryption methods from TeamUtils, deciding when it is necessary <br/>
+ * Do not encode/decode values before calling TeamSettings.get nor TeamSettings.set!!!
  *
  * @author Alex Buloichik (alex73mail@gmail.com)
  */
@@ -51,6 +57,47 @@ public final class TeamSettings {
             configFile = new File(StaticUtils.getConfigDir(), "repositories.properties");
         }
         return configFile;
+    }
+    
+    /** 
+     * Whenever the value should be stored as encrypted or not
+     * Private, because that should remain transparent to users
+     **/
+    private static boolean needsEncryption(String key) {
+        return key.endsWith("!password");
+    }
+    
+    // Should be called at first load of the class
+    static {
+        synchronized (TeamSettings.class) {
+            // Try to encrypt all passwords
+            try {
+                Properties props = new Properties(); File fOri = getConfigFile();
+                if (fOri.exists()) {
+                    try (FileInputStream in = new FileInputStream(fOri)) {
+                        props.load(in);
+                    }
+                    int change = 0;
+                    for(Map.Entry<Object, Object> e : props.entrySet()) 
+                        if (needsEncryption(e.getKey().toString()))
+                            if (! e.getValue().toString().startsWith("***")) {
+                                props.put(e.getKey().toString(), TeamUtils.encodePassword(TeamUtils.decodePassword(e.getValue().toString())));
+                                change++;
+                            }
+                    if (change > 0) {
+                        File fNew = new File(getConfigFile().getAbsolutePath() + ".new");
+                        try (FileOutputStream out = new FileOutputStream(fNew)) {            
+                            props.store(out, null);
+                        }
+                        fOri.delete(); FileUtils.moveFile(fNew, fOri);
+                        Log.log("TeamSettings: " + change + " passwords reencrypted");
+                    }
+                    else Log.log("TeamSettings: no password requires re-encryption");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public static synchronized Set<Object> listKeys() {
@@ -71,7 +118,7 @@ public final class TeamSettings {
     }
 
     /**
-     * Get setting.
+     * Get setting directly readable by caller - decrypted if necessary
      */
     public static synchronized String get(String key) {
         try {
@@ -84,14 +131,15 @@ public final class TeamSettings {
                     in.close();
                 }
             }
-            return p.getProperty(key);
+            if (needsEncryption(key)) return TeamUtils.decodePassword(p.getProperty(key));
+            else return p.getProperty(key);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
     /**
-     * Update setting.
+     * Update setting. Encrypts it if necessary  - do not use set(key, encode(value))!!!
      */
     public static synchronized void set(String key, String newValue) {
         try {
@@ -109,6 +157,7 @@ public final class TeamSettings {
                 f.getParentFile().mkdirs();
             }
             if (newValue != null) {
+                if (needsEncryption(key)) newValue = TeamUtils.encodePassword(newValue);
                 p.setProperty(key, newValue);
             } else {
                 p.remove(key);
