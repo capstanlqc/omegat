@@ -104,7 +104,7 @@ public class SVNAuthenticationManager implements ISVNAuthenticationManager {
         return READ_TIMEOUT;
     }
 
-    protected SVNAuthentication ask(String kind, SVNURL url, String message) throws SVNException {
+    protected SVNAuthentication ask(String kind, SVNURL url, String message) throws Exception {
         if (ISVNAuthenticationManager.PASSWORD.equals(kind)) {
             // ask username+password
         } else if (ISVNAuthenticationManager.SSH.equals(kind)) {
@@ -128,7 +128,7 @@ public class SVNAuthenticationManager implements ISVNAuthenticationManager {
         String user = userPassDialog.userText.getText();
         String pass = new String(userPassDialog.passwordField.getPassword());
         TeamSettings.set(repoUrl + "!" + KEY_USERNAME_SUFFIX, user);
-        TeamSettings.set(repoUrl + "!" + KEY_PASSWORD_SUFFIX, TeamUtils.encodePassword(pass));
+        TeamSettings.set(repoUrl + "!" + KEY_PASSWORD_SUFFIX, pass);    // encryption to be managed by TeamSettings!!!
 
         if (ISVNAuthenticationManager.PASSWORD.equals(kind)) {
             return SVNPasswordAuthentication.newInstance(user, pass.toCharArray(), false, url, false);
@@ -161,8 +161,12 @@ public class SVNAuthenticationManager implements ISVNAuthenticationManager {
                 Log.logDebug(LOGGER, "ssh-agent support couldn't be initialized: {0}", e.getMessage());
             }
         }
-        String user = TeamSettings.get(repoUrl + "!" + KEY_USERNAME_SUFFIX);
-        String pass = TeamUtils.decodePassword(TeamSettings.get(repoUrl + "!" + KEY_PASSWORD_SUFFIX));
+        String user = TeamSettings.get(repoUrl + "!" + KEY_USERNAME_SUFFIX); String pass;
+        try {
+            pass = TeamSettings.get(repoUrl + "!" + KEY_PASSWORD_SUFFIX);   // always returns clear value, even if encrypted!
+        } catch (Exception ex) {
+            throw new KnownException("TEAM_PREDEFINED_CREDENTIALS_ERROR");
+        }
         if (user != null && pass != null) {
             if (ISVNAuthenticationManager.PASSWORD.equals(kind)) {
                 return SVNPasswordAuthentication.newInstance(user, pass.toCharArray(), false, url, false);
@@ -172,14 +176,22 @@ public class SVNAuthenticationManager implements ISVNAuthenticationManager {
                 throw new SVNException(SVNErrorMessage.create(SVNErrorCode.AUTHN_NO_PROVIDER));
             }
         }
-        return ask(kind, url, OStrings.getString("TEAM_USERPASS_FIRST", url.getPath()));
+        try {
+            return ask(kind, url, OStrings.getString("TEAM_USERPASS_FIRST", url.getPath()));
+        } catch (Exception ex) {
+            throw new KnownException("TEAM_PREDEFINED_CREDENTIALS_ERROR");
+        }
     }
 
     public SVNAuthentication getNextAuthentication(String kind, String realm, SVNURL url) throws SVNException {
         if (predefinedUser != null && predefinedPass != null) {
             throw new KnownException("TEAM_PREDEFINED_CREDENTIALS_ERROR");
         }
-        return ask(kind, url, OStrings.getString("TEAM_USERPASS_WRONG", url.getPath()));
+        try {
+            return ask(kind, url, OStrings.getString("TEAM_USERPASS_WRONG", url.getPath()));
+        } catch (Exception ex) {
+            throw new KnownException("TEAM_PREDEFINED_CREDENTIALS_ERROR");
+        }
     };
 
     @Override
